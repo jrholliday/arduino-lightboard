@@ -8,19 +8,11 @@
 #define greenPin     10
 #define bluePin       9
 
-#define pulse_delay  10
+#define pulse_delay  5
 #define flow_delay   10
-enum mode {
-  players_0,
-  players_1,
-  players_2,
-  players_3,
-  players_4,
-  N_modes
-};
 
-volatile mode player_mode; 
-volatile int  current_player;
+volatile int player_mode;
+volatile int current_player;
 
 int colors[5][3] = { {255, 255, 255}, // White
                      {255,   0,   0}, // Red
@@ -35,12 +27,14 @@ void setup()
   pinMode(greenPin, OUTPUT);
   pinMode(bluePin,  OUTPUT);
 
-  player_mode    = players_0;
+  player_mode    = 4;
   current_player = 0;
   setColor(colors[0]);
   
-  attachInterrupt(2, setMode,    RISING);
-  attachInterrupt(3, nextPlayer, RISING);
+  //attachInterrupt(0, setMode,    HIGH);
+  attachInterrupt(1, nextPlayer, HIGH);
+  
+  Serial.begin(9600);      
 }
 
 void setColor(int r, int g, int b, int scale=100)
@@ -58,11 +52,16 @@ void setColor(int rgb[3])
 
 void loop()
 {
-  if ( player_mode == players_0 )
+  Serial.print(player_mode);
+  Serial.print(" ");
+  Serial.print(current_player);
+  Serial.print("\n");
+
+  if ( player_mode == 0 )
   {
     flow();
   }
-  else if ( player_mode == players_1 )
+  else if ( player_mode == 1 )
   {
     // no op
   }
@@ -70,49 +69,51 @@ void loop()
   {
     pulse();
   }
-  
-  
-  
-  
-  return;
-  
-  setColor(255, 255, 255); // white
-  delay(1000);
-  
-  setColor(0, 255, 0);  // green
-  delay(1000);
-  setColor(0, 0, 255);  // blue
-  delay(1000);
-  setColor(255, 0, 0);  // red
-  delay(1000);
-  setColor(255, 255, 0); // yellow
-  delay(1000); 
 }
 
 void setMode()
 {
-  player_mode = (mode)(player_mode+1 % N_modes);
+  //player_mode = (mode)(player_mode+1 % N_modes);
 }
 
 void nextPlayer()
 {
-  current_player = (current_player+1) % player_mode;
-  setColor(colors[current_player+1]);
+  static unsigned long last_interrupt_time = 0;
+  unsigned long interrupt_time = millis();
+
+  if (interrupt_time - last_interrupt_time > 200) 
+  {
+    current_player = ((current_player+1) % player_mode);
+    setColor(colors[current_player+1]);
+
+    Serial.print(current_player);
+    Serial.print("  ");
+    Serial.print(player_mode);
+    Serial.print("\n");
+  }
+
+  last_interrupt_time = interrupt_time;
 }
 
 void pulse()
 {
-  int r = colors[current_player+1][0];
-  int g = colors[current_player+1][1];
-  int b = colors[current_player+1][2];
+  int r,g,b;
 
   for (int i=100; i>=25; i--)
   {
+    r = colors[current_player+1][0];
+    g = colors[current_player+1][1];
+    b = colors[current_player+1][2];
+
     setColor(r,g,b,i);
     delay(pulse_delay);
   }    
   for (int i=25; i<=100; i++)
   {
+    r = colors[current_player+1][0];
+    g = colors[current_player+1][1];
+    b = colors[current_player+1][2];
+
     setColor(r,g,b,i);
     delay(pulse_delay);
   }    
