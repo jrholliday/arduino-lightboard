@@ -4,15 +4,16 @@
  * A controller for a Looney Pyramids playing board.
  */
 
-#define redPin       11
-#define greenPin     10
-#define bluePin       9
+#define redPin            11
+#define greenPin          10
+#define bluePin            9
 
-#define pulse_delay  5
-#define flow_delay   10
+#define base_pulse_delay  10
+#define flow_delay        10
 
 volatile int player_mode;
 volatile int current_player;
+volatile int pulse_delay;
 
 int colors[5][3] = { {255, 255, 255}, // White
                      {255,   0,   0}, // Red
@@ -31,8 +32,8 @@ void setup()
   current_player = 0;
   setColor(colors[0]);
   
-  //attachInterrupt(0, setMode,    HIGH);
-  attachInterrupt(1, nextPlayer, HIGH);
+  attachInterrupt(0, setMode,    RISING);
+  attachInterrupt(1, nextPlayer, RISING);
   
   Serial.begin(9600);      
 }
@@ -86,10 +87,7 @@ void nextPlayer()
     current_player = ((current_player+1) % player_mode);
     setColor(colors[current_player+1]);
 
-    Serial.print(current_player);
-    Serial.print("  ");
-    Serial.print(player_mode);
-    Serial.print("\n");
+    pulse_delay = base_pulse_delay;
   }
 
   last_interrupt_time = interrupt_time;
@@ -98,6 +96,11 @@ void nextPlayer()
 void pulse()
 {
   int r,g,b;
+
+  if ( pulse_delay > 0 )
+  {
+    pulse_delay = pulse_delay - 1;
+  }
 
   for (int i=100; i>=25; i--)
   {
