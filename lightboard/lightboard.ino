@@ -8,7 +8,7 @@
 #define greenPin          10
 #define bluePin            9
 
-#define base_pulse_delay  10
+#define base_pulse_delay  15
 #define flow_delay        10
 
 volatile int player_mode;
@@ -30,6 +30,7 @@ void setup()
 
   player_mode    = 4;
   current_player = 0;
+  pulse_delay    = base_pulse_delay;
   setColor(colors[0]);
   
   attachInterrupt(0, setMode,    RISING);
@@ -82,7 +83,7 @@ void nextPlayer()
   static unsigned long last_interrupt_time = 0;
   unsigned long interrupt_time = millis();
 
-  if (interrupt_time - last_interrupt_time > 200) 
+  if (interrupt_time - last_interrupt_time > 500) 
   {
     current_player = ((current_player+1) % player_mode);
     setColor(colors[current_player+1]);
