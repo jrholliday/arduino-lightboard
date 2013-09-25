@@ -8,8 +8,10 @@
 #define greenPin          10
 #define bluePin            9
 
-#define base_pulse_delay  15
-#define flow_delay        10
+#define base_pulse_delay  25
+#define ramp_delay        50
+
+volatile unsigned long last_interrupt_time;
 
 volatile int player_mode;
 volatile int current_player;
@@ -35,8 +37,10 @@ void setup()
   
   attachInterrupt(0, setMode,    RISING);
   attachInterrupt(1, nextPlayer, RISING);
-  
-  Serial.begin(9600);      
+  //attachInterrupt(0, debounce,   FALLING);
+  //attachInterrupt(1, debounce,   FALLING);
+
+  last_interrupt_time = 0;
 }
 
 void setColor(int r, int g, int b, int scale=100)
@@ -54,18 +58,13 @@ void setColor(int rgb[3])
 
 void loop()
 {
-  Serial.print(player_mode);
-  Serial.print(" ");
-  Serial.print(current_player);
-  Serial.print("\n");
-
   if ( player_mode == 0 )
   {
-    flow();
+    ramp();
   }
   else if ( player_mode == 1 )
   {
-    // no op
+    // Just shine white
   }
   else
   {
@@ -75,12 +74,18 @@ void loop()
 
 void setMode()
 {
-  //player_mode = (mode)(player_mode+1 % N_modes);
+  unsigned long interrupt_time = millis();
+
+  if (interrupt_time - last_interrupt_time > 500) 
+  {
+    player_mode = player_mode+1 % 5;
+  }
+  
+  debounce();
 }
 
 void nextPlayer()
 {
-  static unsigned long last_interrupt_time = 0;
   unsigned long interrupt_time = millis();
 
   if (interrupt_time - last_interrupt_time > 500) 
@@ -91,7 +96,12 @@ void nextPlayer()
     pulse_delay = base_pulse_delay;
   }
 
-  last_interrupt_time = interrupt_time;
+  debounce();
+}
+
+void debounce()
+{
+  last_interrupt_time = millis();
 }
 
 void pulse()
@@ -123,22 +133,22 @@ void pulse()
   }    
 }
 
-void flow()
+void ramp()
 {
   for (int i=0; i<256; i++)
   {
     setColor(256-i, i, 0);
-    delay(flow_delay);
+    delay(ramp_delay);
   }
   for (int i=0; i<256; i++)
   {
     setColor(0, 255-i, i);
-    delay(flow_delay);
+    delay(ramp_delay);
   }
   for (int i=0; i<255; i++)
   {
     setColor(i, 0, 255-i);
-    delay(flow_delay);
+    delay(ramp_delay);
   }
 }
 
