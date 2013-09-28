@@ -4,9 +4,9 @@
  * A controller for a Looney Pyramids playing board.
  */
 
-#define redPin              11
-#define greenPin            10
 #define bluePin              9
+#define redPin              10
+#define greenPin            11
 
 #define base_pulse_delay    25
 #define flash_delay      10000
@@ -50,15 +50,15 @@ void setup()
 
 void setColor(int r, int g, int b, int scale=100)
 {
-  analogWrite(redPin,   255-(scale*r/100));
-  analogWrite(greenPin, 255-(scale*g/100));
-  analogWrite(bluePin,  255-(scale*b/100));  
+  analogWrite(redPin,   (scale*r/100));
+  analogWrite(greenPin, (scale*g/100));
+  analogWrite(bluePin,  (scale*b/100));  
 }
 void setColor(int rgb[3])
 {
-  analogWrite(redPin,   255-rgb[0]);
-  analogWrite(greenPin, 255-rgb[1]);
-  analogWrite(bluePin,  255-rgb[2]);  
+  analogWrite(redPin,   rgb[0]);
+  analogWrite(greenPin, rgb[1]);
+  analogWrite(bluePin,  rgb[2]);  
 }
 
 void flash(int N)
